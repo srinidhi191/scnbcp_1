@@ -1,0 +1,7 @@
+/* Tailwind v4 single import */
+@import "tailwindcss";
+
+/* minimal global styles without @apply to avoid the error you saw */
+html, body, #root { height: 100%; }
+body { background-color: #f8fafc; color: #0f172a; } /* slate-50 / slate-900 */
+a { text-underline-offset: 2px; }
