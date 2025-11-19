@@ -2,7 +2,13 @@
 
 A full-stack web application for managing school notices, queries, and communications. Built with React (frontend) and Node.js/Express (backend).
 
-## 🚀 Quick Deploy
+## ✨ Get Your Deploy Link Now!
+
+**Want to deploy this project and get a public URL?** Choose your preferred platform:
+
+### 🎯 [Quick Deployment Guide →](./DEPLOY.md)
+
+## 🚀 One-Click Deploy
 
 Deploy this application to the cloud with just a few clicks:
 
@@ -165,7 +171,9 @@ After deployment, your application will be available at:
 
 ## 📚 Additional Documentation
 
+- **[Quick Deployment Guide](./DEPLOY.md)** - ⚡ Fastest way to deploy and get your URLs
 - [Detailed Deployment Guide](./README_DEPLOY.md) - Comprehensive deployment instructions with more options
+- [Security Guide](./SECURITY.md) - Important security information and best practices
 - [API Documentation](./apps/api/README.md) - API endpoints and usage (if available)
 
 ## 🔒 Security Notes
