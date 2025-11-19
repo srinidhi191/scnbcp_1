@@ -1,20 +1,33 @@
-# Render manifest (starter). Edit `repo` fields after creating services in Render.
+# Render manifest for SCNBCP deployment
+# This file can be used to automatically set up both services on Render.com
 services:
   - type: web
     name: scnbcp-api
     env: docker
-    repo: "<GITHUB_OWNER>/<REPO>"
+    repo: https://github.com/srinidhi191/scnbcp_1
     branch: main
     docker:
       dockerfilePath: apps/api/Dockerfile
     plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      # Add these as secret environment variables in Render dashboard:
+      # - MONGO_URI (MongoDB connection string)
+      # - JWT_SECRET (strong secret for JWT signing)
+      # - CLIENT_URL (frontend URL for CORS)
+      # - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (optional, for email)
 
-  - type: static
+  - type: web
     name: scnbcp-web
     env: static
-    repo: "<GITHUB_OWNER>/<REPO>"
+    repo: https://github.com/srinidhi191/scnbcp_1
     branch: main
     buildCommand: cd apps/web && npm ci && npm run build
-    publishPath: apps/web/dist
-
-# Replace <GITHUB_OWNER>/<REPO> with your GitHub repo path before importing in Render.
+    staticPublishPath: apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

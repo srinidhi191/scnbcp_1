@@ -1,0 +1,14 @@
+# Netlify configuration for SCNBCP Web App
+[build]
+  base = "apps/web"
+  command = "npm ci && npm run build"
+  publish = "apps/web/dist"
+
+# Redirect all requests to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variables (set these in Netlify dashboard):
+# VITE_API_BASE - URL of your deployed API (e.g., https://scnbcp-api.onrender.com)
