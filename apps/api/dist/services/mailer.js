@@ -19,6 +19,10 @@ const transporter = nodemailer_1.default.createTransport({
             pass: env_1.ENV.SMTP.PASS,
         }
         : undefined,
+    // Allow self-signed certs on dev/testing hosts like Ethereal or when not in production
+    tls: {
+        rejectUnauthorized: !(env_1.ENV.SMTP.HOST && /ethereal|localhost|127\.0\.0\.1/.test(env_1.ENV.SMTP.HOST)) && process.env.NODE_ENV === 'production'
+    }
 });
 async function sendMail(to, subject, html) {
     if (!env_1.ENV.SMTP.USER || !env_1.ENV.SMTP.PASS) {

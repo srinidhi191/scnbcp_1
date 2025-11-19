@@ -5,6 +5,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NoticesList from "./pages/NoticesList";
+import NoticeDetail from "./pages/NoticeDetail";
 import CreateNotice from "./pages/CreateNotice";
 import Queries from "./pages/Queries";
 import Admin from "./pages/dashboards/Admin";
@@ -31,7 +32,9 @@ export default function App() {
             <Route path="/faculty" element={<PrivateRoute><Faculty /></PrivateRoute>} />
             <Route path="/student" element={<PrivateRoute><Student /></PrivateRoute>} />
             <Route path="/notices" element={<PrivateRoute><NoticesList /></PrivateRoute>} />
+            <Route path="/notices/:id" element={<PrivateRoute><NoticeDetail /></PrivateRoute>} />
             <Route path="/create" element={<PrivateRoute><CreateNotice /></PrivateRoute>} />
+            <Route path="/notices/:id/edit" element={<PrivateRoute><CreateNotice /></PrivateRoute>} />
             <Route path="/queries" element={<PrivateRoute><Queries /></PrivateRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

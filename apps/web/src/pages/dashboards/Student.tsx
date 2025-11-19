@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../lib/api";
 import { getUser } from "../../lib/auth";
+import DashboardCard from "../../components/DashboardCard";
+import type { Notice } from "../../types";
 
 export default function Student() {
-  const [notices, setNotices] = useState<any[]>([]);
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(false);
   const me = getUser();
 
@@ -17,15 +19,17 @@ export default function Student() {
         if (mounted) setNotices(data.items || []);
         // fetch persisted acks for this user to initialize acked state
         try {
-          const a = await api.get('/notices/acks');
+          const { data } = await api.get<{ acks?: Array<{ noticeId?: string; acknowledged?: boolean; viewedAt?: string }> }>('/notices/acks');
           const map: Record<string, boolean> = {};
-          (a.data.acks || []).forEach((row: any) => {
-            if (row.acknowledged || row.viewedAt) map[String(row.noticeId)] = true;
+          (data.acks || []).forEach((row) => {
+            const noticeId = row.noticeId;
+            const acknowledged = row.acknowledged;
+            const viewedAt = row.viewedAt;
+            if (acknowledged || viewedAt) map[String(noticeId)] = true;
           });
           if (mounted) setAcked(map);
-        } catch (e) {
+        } catch {
           // ignore if endpoint not available or error
-          // console.error('failed to load acks', e);
         }
       } catch (err) {
         console.error("Failed to load notices for student", err);
@@ -49,10 +53,10 @@ export default function Student() {
     }
   }
 
-  const unreadCount = notices.filter((n) => !acked[n._id]).length;
+  const unreadCount = notices.filter((n) => !acked[String(n._id)]).length;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="container-max mx-auto p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Student Dashboard</h1>
@@ -64,26 +68,28 @@ export default function Student() {
         </div>
       </div>
 
-      <section className="mt-6 bg-white border rounded-lg p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+        <DashboardCard title="Published notices" value={loading ? '—' : notices.length} subtitle="Latest visible to you" icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path stroke="#6366f1" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" d="M8 7h8M8 12h8M8 17h8"/></svg>} accent="#6366f1" />
+        <DashboardCard title="Unread" value={loading ? '—' : unreadCount} subtitle="Not yet marked read" icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path stroke="#ef4444" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3"/></svg>} />
+        <DashboardCard title="Quick actions" value={<a className="text-indigo-600" href="/notices">Browse</a>} subtitle="Open notices or queries" icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path stroke="#6366f1" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" d="M3 12h18"/></svg>} />
+      </div>
+
+      <section className="mt-6 card p-4">
         <h2 className="text-lg font-medium">Latest notices</h2>
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-slate-500">{loading ? '...' : `${notices.length} published notices`}</div>
-          <div className="text-sm font-medium text-sky-600">Unread: {loading ? '—' : unreadCount}</div>
-        </div>
         {loading && <div className="text-sm text-slate-500 mt-2">Loading…</div>}
         {!loading && notices.length === 0 && <div className="text-sm text-slate-500 mt-2">No recent notices. Check back later or contact your faculty.</div>}
         {!loading && notices.length > 0 && (
           <ul className="mt-3 space-y-2">
             {notices.slice(0, 8).map((n) => (
-              <li key={n._id} className={`p-3 border rounded hover:shadow-sm flex items-start justify-between ${acked[n._id] ? 'bg-gray-50' : 'bg-white'}`}>
+              <li key={String(n._id)} className={`p-3 border rounded hover:shadow-sm flex items-start justify-between ${acked[String(n._id)] ? 'bg-gray-50' : 'bg-white'}`}>
                 <div>
                   <div className="font-semibold">{n.title}</div>
                   <div className="text-sm text-slate-500">{n.category} • {n.visibility}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="text-sm text-slate-400">{n.publishAt ? new Date(n.publishAt).toLocaleDateString() : ''}</div>
-                  {!acked[n._id] && (
-                    <button onClick={() => acknowledge(n._id)} className="px-2 py-1 text-sm bg-sky-600 text-white rounded">Mark read</button>
+                  <div className="text-sm text-slate-400">{n.publishAt ? new Date(n.publishAt as string | number | Date).toLocaleDateString() : ''}</div>
+                  {!acked[String(n._id)] && (
+                    <button onClick={() => acknowledge(String(n._id))} className="px-2 py-1 text-sm text-white rounded" style={{ backgroundColor: '#6366f1' }}>Mark read</button>
                   )}
                 </div>
               </li>

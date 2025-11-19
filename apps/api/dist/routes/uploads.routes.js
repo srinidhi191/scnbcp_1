@@ -32,21 +32,27 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const auth_1 = require("../middleware/auth");
-const rbac_1 = require("../middleware/rbac");
-const C = __importStar(require("../controllers/notices.controller"));
+const multer_1 = __importDefault(require("multer"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const C = __importStar(require("../controllers/uploads.controller"));
 const r = (0, express_1.Router)();
-r.post("/", auth_1.auth, (0, rbac_1.rbac)("admin", "faculty"), C.createNotice);
-r.get("/", auth_1.auth, C.listNotices);
-// audience and acks
-r.get("/acks", auth_1.auth, C.listAcks);
-r.get("/:id/audience", auth_1.auth, (0, rbac_1.rbac)("admin", "faculty"), C.getAudience);
-r.get("/:id", auth_1.auth, C.getNotice);
-r.patch("/:id", auth_1.auth, (0, rbac_1.rbac)("admin", "faculty"), C.updateNotice);
-r.post("/:id/publish", auth_1.auth, (0, rbac_1.rbac)("admin", "faculty"), C.publishNow);
-r.post("/:id/archive", auth_1.auth, (0, rbac_1.rbac)("admin", "faculty"), C.archiveNotice);
-r.post("/:id/view", auth_1.auth, C.markViewed);
-r.post("/:id/ack", auth_1.auth, C.acknowledge);
+// Destination: apps/api/uploads
+const destDir = path_1.default.join(__dirname, "..", "..", "uploads");
+if (!fs_1.default.existsSync(destDir))
+    fs_1.default.mkdirSync(destDir, { recursive: true });
+const storage = multer_1.default.diskStorage({
+    destination: (_req, _file, cb) => cb(null, destDir),
+    filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`),
+});
+const upload = (0, multer_1.default)({ storage });
+// POST /api/uploads -> upload file
+r.post("/", upload.single("file"), C.uploadFile);
+// POST /api/uploads/notices/:id -> upload and attach to notice
+r.post("/notices/:id", upload.single("file"), C.attachToNotice);
 exports.default = r;

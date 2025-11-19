@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.acknowledge = exports.markViewed = exports.archiveNotice = exports.publishNow = exports.updateNotice = exports.getNotice = exports.listNotices = exports.createNotice = void 0;
+exports.listAcks = exports.getAudience = exports.acknowledge = exports.markViewed = exports.archiveNotice = exports.publishNow = exports.updateNotice = exports.getNotice = exports.listNotices = exports.createNotice = void 0;
 const Notice_1 = __importDefault(require("../models/Notice"));
 const NoticeAudience_1 = __importDefault(require("../models/NoticeAudience"));
 const NoticeAck_1 = __importDefault(require("../models/NoticeAck"));
@@ -30,13 +30,53 @@ const roomsForAudience = async (noticeId) => {
 const createNotice = async (req, res) => {
     try {
         const { title, body, category, priority, visibility, publishAt, expireAt, audience = [], attachments = [] } = req.body;
-        // validate targeted audience presence
-        if (visibility === "targeted" && (!Array.isArray(audience) || audience.length === 0)) {
+        // sanitize audience entries (remove empty string fields) and validate presence for targeted notices
+        const sanitizedAudience = Array.isArray(audience)
+            ? audience
+                .map((a) => {
+                const out = { noticeId: undefined };
+                if (a.role)
+                    out.role = a.role;
+                if (a.departmentId)
+                    out.departmentId = a.departmentId;
+                if (a.programId)
+                    out.programId = a.programId;
+                if (a.batchId)
+                    out.batchId = a.batchId;
+                if (a.userId)
+                    out.userId = a.userId;
+                return out;
+            })
+                .map((o) => {
+                // ensure noticeId will be set later; remove entries that have no identifying fields
+                const keys = Object.keys(o).filter((k) => k !== "noticeId");
+                if (keys.length === 0)
+                    return null;
+                return o;
+            })
+                .filter(Boolean)
+            : [];
+        if (visibility === "targeted" && sanitizedAudience.length === 0) {
             return res.status(400).json({ error: "Targeted notices require at least one audience entry" });
         }
         const notice = await Notice_1.default.create({ title, body, category, priority, visibility, publishAt, expireAt, createdBy: req.user._id, attachments });
-        if (visibility === "targeted" && audience.length) {
-            await NoticeAudience_1.default.insertMany(audience.map((a) => ({ noticeId: notice._id, ...a })));
+        if (visibility === "targeted" && sanitizedAudience.length) {
+            // attach noticeId and only include non-empty fields so mongoose doesn't try to cast empty strings to ObjectId
+            const rows = sanitizedAudience.map((a) => {
+                const row = { noticeId: notice._id };
+                if (a.role)
+                    row.role = a.role;
+                if (a.departmentId)
+                    row.departmentId = a.departmentId;
+                if (a.programId)
+                    row.programId = a.programId;
+                if (a.batchId)
+                    row.batchId = a.batchId;
+                if (a.userId)
+                    row.userId = a.userId;
+                return row;
+            });
+            await NoticeAudience_1.default.insertMany(rows);
         }
         // If publishAt is not set or is in the past, auto-publish and notify immediately
         try {
@@ -243,3 +283,25 @@ const acknowledge = async (req, res) => {
     res.json({ ok: true });
 };
 exports.acknowledge = acknowledge;
+const getAudience = async (req, res) => {
+    try {
+        const rows = await NoticeAudience_1.default.find({ noticeId: req.params.id });
+        res.json({ audience: rows });
+    }
+    catch (err) {
+        console.error('getAudience error', err);
+        res.status(500).json({ error: 'Failed to fetch audience' });
+    }
+};
+exports.getAudience = getAudience;
+const listAcks = async (req, res) => {
+    try {
+        const rows = await NoticeAck_1.default.find({ userId: req.user._id });
+        res.json({ acks: rows });
+    }
+    catch (err) {
+        console.error('listAcks error', err);
+        res.status(500).json({ error: 'Failed to fetch acks' });
+    }
+};
+exports.listAcks = listAcks;

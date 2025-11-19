@@ -9,6 +9,7 @@ import { connectDB } from "./db/mongo";
 import authRoutes from "./routes/auth.routes";
 import noticesRoutes from "./routes/notices.routes";
 import queriesRoutes from "./routes/queries.routes";
+import { initSocket } from "./realtime/socket";
 
 const app = express();
 
@@ -55,6 +56,13 @@ const server = http.createServer(app);
     await connectDB(ENV.MONGO_URI);
     const port = Number(ENV.PORT || 4000);
     console.log("ENV check:", { CLIENT_URL: ENV.CLIENT_URL, PORT: port });
+    // initialize socket.io so controllers using getIO() can emit events
+    try {
+      initSocket(server, ENV.CLIENT_URL || "http://127.0.0.1:5173");
+      console.log("Realtime socket initialized");
+    } catch (e) {
+      console.warn("Realtime socket initialization failed:", e);
+    }
     // start listening and log on success
     // Bind explicitly to IPv4 loopback to avoid IPv6/IPv4 ambiguity on some Windows setups
     server.listen(port, "127.0.0.1", () => {

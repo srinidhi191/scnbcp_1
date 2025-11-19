@@ -7,16 +7,19 @@ exports.listQueries = exports.createQuery = void 0;
 const Query_1 = __importDefault(require("../models/Query"));
 const createQuery = async (req, res) => {
     try {
-        const { subject, message } = req.body;
+        const { subject, message, noticeId } = req.body;
         if (!subject || !message)
             return res.status(400).json({ error: "Subject and message are required" });
-        const q = await Query_1.default.create({
+        const payload = {
             subject,
             message,
             from: req.user?._id,
             email: req.user?.email || req.body.email,
             role: req.user?.roles?.[0] || req.body.role,
-        });
+        };
+        if (noticeId)
+            payload.noticeId = noticeId;
+        const q = await Query_1.default.create(payload);
         return res.json({ query: q });
     }
     catch (err) {

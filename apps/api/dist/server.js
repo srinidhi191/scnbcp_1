@@ -13,6 +13,7 @@ const mongo_1 = require("./db/mongo");
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const notices_routes_1 = __importDefault(require("./routes/notices.routes"));
 const queries_routes_1 = __importDefault(require("./routes/queries.routes"));
+const socket_1 = require("./realtime/socket");
 const app = (0, express_1.default)();
 // CORS + body parsing
 // Allow the configured client origin, plus common local dev ports (5173/5174).
@@ -26,6 +27,10 @@ app.use((0, cors_1.default)({
             env_1.ENV.CLIENT_URL,
             "http://localhost:5173",
             "http://localhost:5174",
+            // Vite may report 127.0.0.1 as the host in logs and the browser may use that
+            // form as the Origin header, so accept both localhost and 127.0.0.1 variants.
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
         ]);
         if (allowed.has(origin))
             return callback(null, true);
@@ -49,6 +54,14 @@ const server = http_1.default.createServer(app);
         await (0, mongo_1.connectDB)(env_1.ENV.MONGO_URI);
         const port = Number(env_1.ENV.PORT || 4000);
         console.log("ENV check:", { CLIENT_URL: env_1.ENV.CLIENT_URL, PORT: port });
+        // initialize socket.io so controllers using getIO() can emit events
+        try {
+            (0, socket_1.initSocket)(server, env_1.ENV.CLIENT_URL || "http://127.0.0.1:5173");
+            console.log("Realtime socket initialized");
+        }
+        catch (e) {
+            console.warn("Realtime socket initialization failed:", e);
+        }
         // start listening and log on success
         // Bind explicitly to IPv4 loopback to avoid IPv6/IPv4 ambiguity on some Windows setups
         server.listen(port, "127.0.0.1", () => {

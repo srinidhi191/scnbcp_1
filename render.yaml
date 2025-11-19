@@ -1,0 +1,20 @@
+# Render manifest (starter). Edit `repo` fields after creating services in Render.
+services:
+  - type: web
+    name: scnbcp-api
+    env: docker
+    repo: "<GITHUB_OWNER>/<REPO>"
+    branch: main
+    docker:
+      dockerfilePath: apps/api/Dockerfile
+    plan: free
+
+  - type: static
+    name: scnbcp-web
+    env: static
+    repo: "<GITHUB_OWNER>/<REPO>"
+    branch: main
+    buildCommand: cd apps/web && npm ci && npm run build
+    publishPath: apps/web/dist
+
+# Replace <GITHUB_OWNER>/<REPO> with your GitHub repo path before importing in Render.

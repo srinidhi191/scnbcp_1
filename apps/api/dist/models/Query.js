@@ -4,6 +4,7 @@ const mongoose_1 = require("mongoose");
 const QuerySchema = new mongoose_1.Schema({
     subject: { type: String, required: true },
     message: { type: String, required: true },
+    noticeId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Notice" },
     from: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
     email: String,
     role: String,

@@ -1,3 +1,15 @@
+export type Notice = {
+  _id: string;
+  title?: string;
+  body?: string;
+  category?: string;
+  visibility?: string;
+  status?: string;
+  createdAt?: string | number | Date;
+  publishAt?: string | number | Date;
+  createdBy?: string | { _id?: string };
+};
+
 export type User = {
   _id: string;
   name: string;
@@ -11,16 +23,4 @@ export type User = {
 export type LoginResponse = {
   token: string;
   user: User;
-};
-
-export type Notice = {
-  _id: string;
-  title: string;
-  body: string;
-  category: string;
-  priority: "low" | "normal" | "high";
-  status: "draft" | "scheduled" | "published" | "archived";
-  visibility: "public" | "targeted";
-  createdAt?: string;
-  publishAt?: string;
 };
